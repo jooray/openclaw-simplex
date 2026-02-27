@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 
 export type SimplexCliHandle = {
   proc: ChildProcessWithoutNullStreams;
@@ -32,7 +32,7 @@ export function startSimplexCli(params: {
   const exitPromise = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
     (resolve) => {
       exitResolver = resolve;
-    },
+    }
   );
 
   const ready = new Promise<void>((resolve, reject) => {

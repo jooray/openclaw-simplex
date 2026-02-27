@@ -10,7 +10,7 @@ export type SimplexCommandErrorResponse = {
 };
 
 export function resolveSimplexCommandError(
-  resp: SimplexCommandErrorResponse | undefined,
+  resp: SimplexCommandErrorResponse | undefined
 ): string | undefined {
   if (!resp || resp.type !== "chatCmdError") {
     return undefined;

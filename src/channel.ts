@@ -5,8 +5,8 @@ import type {
 } from "openclaw/plugin-sdk";
 import {
   DEFAULT_ACCOUNT_ID,
-  formatPairingApproveHint,
   PAIRING_APPROVED_MESSAGE,
+  formatPairingApproveHint,
 } from "openclaw/plugin-sdk";
 import {
   listSimplexAccountIds,
@@ -17,7 +17,7 @@ import { simplexMessageActions } from "./actions.js";
 import { SimplexChannelConfigSchema } from "./config-schema.js";
 import { simplexOnboardingAdapter } from "./onboarding.js";
 import { startSimplexCli } from "./simplex-cli.js";
-import { buildSendMessagesCommand, type SimplexComposedMessage } from "./simplex-commands.js";
+import { type SimplexComposedMessage, buildSendMessagesCommand } from "./simplex-commands.js";
 import {
   listSimplexDirectoryGroups,
   listSimplexDirectoryPeers,
@@ -41,11 +41,15 @@ function collectStrings(value: unknown, out: string[]): void {
     return;
   }
   if (Array.isArray(value)) {
-    value.forEach((entry) => collectStrings(entry, out));
+    for (const entry of value) {
+      collectStrings(entry, out);
+    }
     return;
   }
   if (value && typeof value === "object") {
-    Object.values(value as Record<string, unknown>).forEach((entry) => collectStrings(entry, out));
+    for (const entry of Object.values(value as Record<string, unknown>)) {
+      collectStrings(entry, out);
+    }
   }
 }
 
@@ -138,7 +142,7 @@ async function waitForSimplexWs(params: {
   const maxDelayMs = params.maxDelayMs ?? 2_000;
   const connectTimeoutMs = Math.min(
     2_000,
-    params.account.config.connection?.connectTimeoutMs ?? 2_000,
+    params.account.config.connection?.connectTimeoutMs ?? 2_000
   );
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -157,8 +161,8 @@ async function waitForSimplexWs(params: {
       }
       params.log?.debug?.(
         `[${params.account.accountId}] SimpleX preflight failed (attempt ${attempt}/${attempts}): ${String(
-          err,
-        )}; retrying in ${delayMs}ms`,
+          err
+        )}; retrying in ${delayMs}ms`
       );
       await sleep(delayMs, params.abortSignal);
       delayMs = Math.min(maxDelayMs, delayMs * 2);
@@ -182,7 +186,7 @@ function resolveSimplexGroupRequireMention(params: ChannelGroupContext): boolean
 }
 
 function resolveSimplexGroupToolPolicy(
-  params: ChannelGroupContext,
+  params: ChannelGroupContext
 ): GroupToolPolicyConfig | undefined {
   const account = resolveSimplexAccount({ cfg: params.cfg, accountId: params.accountId });
   const groups = account.config.groups ?? {};
@@ -219,7 +223,7 @@ function normalizeSimplexContactRef(value: string): string {
 
 async function withSimplexClient<T>(
   account: ResolvedSimplexAccount,
-  fn: (client: SimplexWsClient) => Promise<T>,
+  fn: (client: SimplexWsClient) => Promise<T>
 ): Promise<T> {
   const existing = activeClients.get(account.accountId);
   if (existing) {
@@ -488,7 +492,7 @@ export const simplexPlugin: ChannelPlugin<ResolvedSimplexAccount> = {
       if (shouldProbeAddress) {
         try {
           const response = await withSimplexClient(account, (client) =>
-            client.sendCommand("/show_address"),
+            client.sendCommand("/show_address")
           );
           addressLink = extractSimplexAddressLink(response);
         } catch {
@@ -567,7 +571,7 @@ export const simplexPlugin: ChannelPlugin<ResolvedSimplexAccount> = {
           () => {
             resolve();
           },
-          { once: true },
+          { once: true }
         );
       });
 

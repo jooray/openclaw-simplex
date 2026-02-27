@@ -5,14 +5,14 @@ import type {
 } from "openclaw/plugin-sdk";
 import { listEnabledSimplexAccounts, resolveSimplexAccount } from "./accounts.js";
 import {
-  buildDeleteChatItemCommand,
+  type SimplexComposedMessage,
   buildAddGroupMemberCommand,
+  buildDeleteChatItemCommand,
+  buildLeaveGroupCommand,
   buildReactionCommand,
   buildRemoveGroupMemberCommand,
   buildUpdateChatItemCommand,
   buildUpdateGroupProfileCommand,
-  buildLeaveGroupCommand,
-  type SimplexComposedMessage,
 } from "./simplex-commands.js";
 import { buildComposedMessages } from "./simplex-media.js";
 import { SimplexWsClient } from "./simplex-ws-client.js";
@@ -48,7 +48,7 @@ function jsonResult(payload: unknown): ToolResult {
 function readStringParam(
   params: SimplexActionParams,
   key: string,
-  options: { required?: boolean; allowEmpty?: boolean } = {},
+  options: { required?: boolean; allowEmpty?: boolean } = {}
 ): string | undefined {
   const raw = params[key];
   if (typeof raw !== "string") {
@@ -70,7 +70,7 @@ function readStringParam(
 function readNumberParam(
   params: SimplexActionParams,
   key: string,
-  options: { required?: boolean; integer?: boolean } = {},
+  options: { required?: boolean; integer?: boolean } = {}
 ): number | undefined {
   const raw = params[key];
   let value: number | undefined;
@@ -177,7 +177,7 @@ function readMessageIds(params: SimplexActionParams): Array<number | string> {
 
 async function withSimplexClient<T>(
   account: ResolvedSimplexAccount,
-  fn: (client: SimplexWsClient) => Promise<T>,
+  fn: (client: SimplexWsClient) => Promise<T>
 ): Promise<T> {
   const client = new SimplexWsClient({
     url: account.wsUrl,
@@ -204,7 +204,11 @@ async function resolveEditMessage(params: {
   if (composed.length === 0) {
     throw new Error("text required");
   }
-  return composed[0];
+  const first = composed[0];
+  if (!first) {
+    throw new Error("text required");
+  }
+  return first;
 }
 
 export const simplexMessageActions: ChannelMessageActionAdapter = {

@@ -43,11 +43,15 @@ function collectStrings(value: unknown, out: string[]): void {
     return;
   }
   if (Array.isArray(value)) {
-    value.forEach((entry) => collectStrings(entry, out));
+    for (const entry of value) {
+      collectStrings(entry, out);
+    }
     return;
   }
   if (value && typeof value === "object") {
-    Object.values(value as Record<string, unknown>).forEach((entry) => collectStrings(entry, out));
+    for (const entry of Object.values(value as Record<string, unknown>)) {
+      collectStrings(entry, out);
+    }
   }
 }
 
@@ -185,7 +189,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, 'mode must be "connect" or "address"'),
+          createError(INVALID_REQUEST, 'mode must be "connect" or "address"')
         );
         return;
       }
@@ -199,7 +203,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`)
         );
         return;
       }
@@ -207,7 +211,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`)
         );
         return;
       }
@@ -234,8 +238,8 @@ const plugin = {
           undefined,
           createError(
             UNAVAILABLE,
-            `SimpleX invite failed: ${err instanceof Error ? err.message : String(err)}`,
-          ),
+            `SimpleX invite failed: ${err instanceof Error ? err.message : String(err)}`
+          )
         );
       }
     });
@@ -249,7 +253,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`)
         );
         return;
       }
@@ -257,7 +261,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`)
         );
         return;
       }
@@ -311,8 +315,8 @@ const plugin = {
           undefined,
           createError(
             UNAVAILABLE,
-            `SimpleX invite list failed: ${err instanceof Error ? err.message : String(err)}`,
-          ),
+            `SimpleX invite list failed: ${err instanceof Error ? err.message : String(err)}`
+          )
         );
       }
     });
@@ -326,7 +330,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is disabled`)
         );
         return;
       }
@@ -334,7 +338,7 @@ const plugin = {
         respond(
           false,
           undefined,
-          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`),
+          createError(INVALID_REQUEST, `SimpleX account "${accountId}" is not configured`)
         );
         return;
       }
@@ -358,8 +362,8 @@ const plugin = {
           undefined,
           createError(
             UNAVAILABLE,
-            `SimpleX invite revoke failed: ${err instanceof Error ? err.message : String(err)}`,
-          ),
+            `SimpleX invite revoke failed: ${err instanceof Error ? err.message : String(err)}`
+          )
         );
       }
     });

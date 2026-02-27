@@ -108,7 +108,7 @@ function mapMemberEntry(entry: unknown): ChannelDirectoryEntry | null {
       member.memberId ??
       member.contactId ??
       record.groupMemberId ??
-      record.memberId,
+      record.memberId
   );
   if (!id) {
     return null;
@@ -157,7 +157,7 @@ function normalizeSimplexInputId(input: string): { id: string; explicit: boolean
 
 async function withSimplexClient<T>(
   account: ResolvedSimplexAccount,
-  fn: (client: SimplexWsClient) => Promise<T>,
+  fn: (client: SimplexWsClient) => Promise<T>
 ): Promise<T> {
   const client = new SimplexWsClient({
     url: account.wsUrl,
@@ -173,7 +173,7 @@ async function withSimplexClient<T>(
 
 async function fetchActiveUserInfo(
   account: ResolvedSimplexAccount,
-  runtime: RuntimeEnv,
+  runtime: RuntimeEnv
 ): Promise<ActiveUserInfo | null> {
   try {
     return await withSimplexClient(account, async (client) => {
@@ -225,7 +225,7 @@ async function listContactsLive(params: {
     const filtered = q
       ? mapped.filter(
           (entry) =>
-            entry.id.toLowerCase().includes(q) || (entry.name?.toLowerCase().includes(q) ?? false),
+            entry.id.toLowerCase().includes(q) || (entry.name?.toLowerCase().includes(q) ?? false)
         )
       : mapped;
     const limit = params.limit && params.limit > 0 ? params.limit : undefined;
@@ -249,7 +249,7 @@ async function listGroupsLive(params: {
       buildListGroupsCommand({
         userId: activeUserId,
         search: params.query ?? undefined,
-      }),
+      })
     );
     const resp = response.resp as Record<string, unknown> | undefined;
     const groups =
@@ -263,7 +263,7 @@ async function listGroupsLive(params: {
     const filtered = q
       ? mapped.filter(
           (entry) =>
-            entry.id.toLowerCase().includes(q) || (entry.name?.toLowerCase().includes(q) ?? false),
+            entry.id.toLowerCase().includes(q) || (entry.name?.toLowerCase().includes(q) ?? false)
         )
       : mapped;
     const limit = params.limit && params.limit > 0 ? params.limit : undefined;
@@ -281,7 +281,7 @@ async function listGroupMembersLive(params: {
     const response = await client.sendCommand(
       buildListGroupMembersCommand({
         groupId: params.groupId,
-      }),
+      })
     );
     const resp = response.resp as Record<string, unknown> | undefined;
     const members =
@@ -299,7 +299,7 @@ async function listGroupMembersLive(params: {
 }
 
 export async function resolveSimplexSelf(
-  params: SimplexDirectoryParams,
+  params: SimplexDirectoryParams
 ): Promise<ChannelDirectoryEntry | null> {
   const account = resolveSimplexAccount(params);
   if (!account.configured) {
@@ -421,11 +421,15 @@ export async function resolveSimplexTargets(params: {
     }
     const matches = entries.filter((entry) => (entry.name ?? "").toLowerCase().includes(needle));
     if (matches.length === 1) {
+      const only = matches[0];
+      if (!only) {
+        return { input, resolved: false };
+      }
       return {
         input,
         resolved: true,
-        id: matches[0].id,
-        name: matches[0].name,
+        id: only.id,
+        name: only.name,
       };
     }
     if (matches.length > 1) {

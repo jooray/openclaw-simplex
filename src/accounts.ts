@@ -1,4 +1,4 @@
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId, type OpenClawConfig } from "openclaw/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, type OpenClawConfig, normalizeAccountId } from "openclaw/plugin-sdk";
 import type { SimplexAccountConfig, SimplexConfig } from "./config-schema.js";
 import type {
   ResolvedSimplexAccount,
@@ -36,7 +36,7 @@ export function resolveDefaultSimplexAccountId(cfg: OpenClawConfig): string {
 
 function mergeConnection(
   base: SimplexConnectionConfig = {},
-  account: SimplexConnectionConfig = {},
+  account: SimplexConnectionConfig = {}
 ): SimplexConnectionConfig {
   return {
     ...base,

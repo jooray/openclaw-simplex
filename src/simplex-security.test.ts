@@ -104,20 +104,20 @@ describe("simplex allowlist", () => {
     expect(
       isSimplexAllowlisted({
         allowFrom: ["*"],
-      }),
+      })
     ).toBe(true);
 
     expect(
       isSimplexAllowlisted({
         allowFrom: ["@alice"],
         senderId: "Alice",
-      }),
+      })
     ).toBe(true);
     expect(
       isSimplexAllowlisted({
         allowFrom: ["12345"],
         senderId: "simplex:@12345",
-      }),
+      })
     ).toBe(true);
 
     expect(
@@ -125,7 +125,7 @@ describe("simplex allowlist", () => {
         allowFrom: ["group:Team"],
         groupId: "team",
         allowGroupId: false,
-      }),
+      })
     ).toBe(false);
 
     expect(
@@ -133,7 +133,7 @@ describe("simplex allowlist", () => {
         allowFrom: ["group:Team"],
         groupId: "TEAM",
         allowGroupId: true,
-      }),
+      })
     ).toBe(true);
   });
 });

@@ -100,7 +100,7 @@ function normalizeSimplexSenderId(value?: string | null): string | undefined {
 
 function resolveMessageText(
   content: { type?: string; text?: string } | undefined,
-  fileName?: string,
+  fileName?: string
 ): string {
   if (!content) {
     return "";
@@ -287,7 +287,7 @@ export async function startSimplexMonitor(params: SimplexMonitorOpts): Promise<{
         runtime.error?.(`[${account.accountId}] SimpleX close failed: ${String(err)}`);
       });
     },
-    { once: true },
+    { once: true }
   );
 
   return { client };
@@ -318,7 +318,7 @@ async function connectWithRetry(params: {
         throw err;
       }
       params.runtime.error?.(
-        `[${params.accountId}] SimpleX connect failed (attempt ${attempt}/${attempts}): ${String(err)}; retrying in ${delayMs}ms`,
+        `[${params.accountId}] SimpleX connect failed (attempt ${attempt}/${attempts}): ${String(err)}; retrying in ${delayMs}ms`
       );
       await sleep(delayMs, params.abortSignal);
       delayMs = Math.min(maxDelayMs, delayMs * 2);
@@ -358,7 +358,7 @@ async function handleSimplexEvent(params: {
   const { event, account, cfg, runtime, statusSink, client } = params;
   if (event.type === "rcvFileDescrReady") {
     const fileId = Number(
-      (event as { rcvFileTransfer?: { fileId?: number } })?.rcvFileTransfer?.fileId,
+      (event as { rcvFileTransfer?: { fileId?: number } })?.rcvFileTransfer?.fileId
     );
     if (Number.isFinite(fileId)) {
       await requestFileDownload({ fileId, account, client, runtime });
@@ -437,14 +437,19 @@ async function handleSimplexEvent(params: {
     const groupPolicy = account.config.groupPolicy ?? defaultGroupPolicy ?? "allowlist";
     const configAllowFrom = (account.config.allowFrom ?? []).map((entry) => String(entry));
     const configGroupAllowFrom = (account.config.groupAllowFrom ?? []).map((entry) =>
-      String(entry),
+      String(entry)
     );
     const shouldComputeAuth = core.channel.commands.shouldComputeCommandAuthorized(rawBody, cfg);
     const shouldLoadAllowFromStore =
       (!isGroup && (dmPolicy !== "open" || shouldComputeAuth)) ||
       (isGroup && (groupPolicy !== "open" || shouldComputeAuth));
     const storeAllowFrom = shouldLoadAllowFromStore
-      ? await core.channel.pairing.readAllowFromStore("simplex").catch(() => [])
+      ? await core.channel.pairing
+          .readAllowFromStore({
+            channel: "simplex",
+            accountId: account.accountId,
+          })
+          .catch(() => [])
       : [];
     const effectiveDmAllowFrom = [...configAllowFrom, ...storeAllowFrom];
     const baseGroupAllowFrom =
@@ -478,7 +483,7 @@ async function handleSimplexEvent(params: {
       if (groupPolicy === "allowlist") {
         if (effectiveGroupAllowFrom.length === 0) {
           runtime.log?.(
-            `[${account.accountId}] SimpleX drop group (groupPolicy=allowlist, empty allowlist)`,
+            `[${account.accountId}] SimpleX drop group (groupPolicy=allowlist, empty allowlist)`
           );
           continue;
         }
@@ -490,7 +495,7 @@ async function handleSimplexEvent(params: {
         });
         if (!allowed) {
           runtime.log?.(
-            `[${account.accountId}] SimpleX drop group sender ${context.senderId ?? "unknown"} (not allowlisted)`,
+            `[${account.accountId}] SimpleX drop group sender ${context.senderId ?? "unknown"} (not allowlisted)`
           );
           continue;
         }
@@ -498,7 +503,7 @@ async function handleSimplexEvent(params: {
     } else {
       if (dmPolicy === "disabled") {
         runtime.log?.(
-          `[${account.accountId}] SimpleX drop DM from ${context.senderId ?? "unknown"} (dmPolicy=disabled)`,
+          `[${account.accountId}] SimpleX drop DM from ${context.senderId ?? "unknown"} (dmPolicy=disabled)`
         );
         continue;
       }
@@ -514,6 +519,7 @@ async function handleSimplexEvent(params: {
             const { code, created } = await core.channel.pairing.upsertPairingRequest({
               channel: "simplex",
               id: senderId,
+              accountId: account.accountId,
               meta: { name: context.senderName },
             });
             if (created) {
@@ -535,13 +541,13 @@ async function handleSimplexEvent(params: {
                 statusSink?.({ lastOutboundAt: Date.now() });
               } catch (err) {
                 runtime.error?.(
-                  `[${account.accountId}] SimpleX pairing reply failed: ${String(err)}`,
+                  `[${account.accountId}] SimpleX pairing reply failed: ${String(err)}`
                 );
               }
             }
           } else {
             runtime.log?.(
-              `[${account.accountId}] SimpleX drop DM from ${context.senderId ?? "unknown"} (dmPolicy=${dmPolicy})`,
+              `[${account.accountId}] SimpleX drop DM from ${context.senderId ?? "unknown"} (dmPolicy=${dmPolicy})`
             );
           }
           continue;
@@ -573,7 +579,7 @@ async function handleSimplexEvent(params: {
       effectiveWasMentioned = mentionGate.effectiveWasMentioned;
       if (mentionGate.shouldSkip) {
         runtime.log?.(
-          `[${account.accountId}] SimpleX drop group ${context.chatId} (mention required)`,
+          `[${account.accountId}] SimpleX drop group ${context.chatId} (mention required)`
         );
         continue;
       }
@@ -582,7 +588,7 @@ async function handleSimplexEvent(params: {
     if (isGroup && core.channel.commands.isControlCommandMessage(rawBody, cfg)) {
       if (commandAuthorized !== true) {
         runtime.log?.(
-          `[${account.accountId}] SimpleX drop control command from ${context.senderId ?? "unknown"}`,
+          `[${account.accountId}] SimpleX drop control command from ${context.senderId ?? "unknown"}`
         );
         continue;
       }
@@ -662,36 +668,35 @@ async function handleSimplexEvent(params: {
     if (typeof fileId === "number") {
       if (typeof fileSize === "number" && fileSize > maxBytes) {
         runtime.error?.(
-          `[${account.accountId}] SimpleX file ${fileId} exceeds limit (${fileSize} > ${maxBytes})`,
+          `[${account.accountId}] SimpleX file ${fileId} exceeds limit (${fileSize} > ${maxBytes})`
         );
         continue;
-      } else {
-        const accepted = await requestFileDownload({ fileId, account, client, runtime });
-        if (accepted) {
-          pendingFiles.set(pendingKey(account.accountId, fileId), pending);
-          setTimeout(() => {
-            const key = pendingKey(account.accountId, fileId);
-            const current = pendingFiles.get(key);
-            if (current) {
-              pendingFiles.delete(key);
-              void current.client.sendCommand(buildCancelFileCommand(fileId)).catch((err) => {
-                runtime.error?.(
-                  `[${account.accountId}] SimpleX file timeout cancel failed: ${String(err)}`,
-                );
-              });
-              void dispatchInbound({
-                pending: current,
-                mediaPath: undefined,
-                mediaType: undefined,
-              }).catch((err) => {
-                runtime.error?.(
-                  `[${account.accountId}] SimpleX pending file timeout: ${String(err)}`,
-                );
-              });
-            }
-          }, PENDING_FILE_TIMEOUT_MS);
-          continue;
-        }
+      }
+      const accepted = await requestFileDownload({ fileId, account, client, runtime });
+      if (accepted) {
+        pendingFiles.set(pendingKey(account.accountId, fileId), pending);
+        setTimeout(() => {
+          const key = pendingKey(account.accountId, fileId);
+          const current = pendingFiles.get(key);
+          if (current) {
+            pendingFiles.delete(key);
+            void current.client.sendCommand(buildCancelFileCommand(fileId)).catch((err) => {
+              runtime.error?.(
+                `[${account.accountId}] SimpleX file timeout cancel failed: ${String(err)}`
+              );
+            });
+            void dispatchInbound({
+              pending: current,
+              mediaPath: undefined,
+              mediaType: undefined,
+            }).catch((err) => {
+              runtime.error?.(
+                `[${account.accountId}] SimpleX pending file timeout: ${String(err)}`
+              );
+            });
+          }
+        }, PENDING_FILE_TIMEOUT_MS);
+        continue;
       }
     }
 
@@ -776,7 +781,7 @@ async function dispatchInbound(params: {
         }
         if (!pending.account.enabled || !pending.account.configured) {
           pending.runtime.error?.(
-            `[${pending.account.accountId}] SimpleX reply skipped: account not ready (enabled=${pending.account.enabled}, configured=${pending.account.configured})`,
+            `[${pending.account.accountId}] SimpleX reply skipped: account not ready (enabled=${pending.account.enabled}, configured=${pending.account.configured})`
           );
           return;
         }
@@ -791,7 +796,7 @@ async function dispatchInbound(params: {
       },
       onError: (err) => {
         pending.runtime.error?.(
-          `[${pending.account.accountId}] SimpleX reply failed: ${String(err)}`,
+          `[${pending.account.accountId}] SimpleX reply failed: ${String(err)}`
         );
       },
     },

@@ -118,8 +118,12 @@ describe("simplex invite gateway", () => {
         getRuntimeSnapshot: () => ({ channels: {}, channelAccounts: {} }),
       },
     });
-    expect(respond).toHaveBeenCalled();
-    const [ok] = respond.mock.calls[0];
+    const firstCall = respond.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error("missing response call");
+    }
+    const [ok] = firstCall;
     expect(ok).toBe(false);
   });
 
@@ -145,7 +149,12 @@ describe("simplex invite gateway", () => {
       },
     });
 
-    const [ok, payload] = respond.mock.calls[0];
+    const firstCall = respond.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error("missing response call");
+    }
+    const [ok, payload] = firstCall;
     expect(ok).toBe(true);
     expect(payload).toMatchObject({
       link: "simplex://invite123",
@@ -178,7 +187,12 @@ describe("simplex invite gateway", () => {
       },
     });
 
-    const [ok, payload] = respond.mock.calls[0];
+    const firstCall = respond.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error("missing response call");
+    }
+    const [ok, payload] = firstCall;
     expect(ok).toBe(true);
     expect(payload).toMatchObject({
       link: "simplex://address456",
@@ -217,7 +231,12 @@ describe("simplex invite gateway", () => {
       },
     });
 
-    const [ok, payload] = respond.mock.calls[0];
+    const firstCall = respond.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error("missing response call");
+    }
+    const [ok, payload] = firstCall;
     expect(ok).toBe(true);
     expect(payload).toMatchObject({
       accountId: "default",
@@ -255,7 +274,12 @@ describe("simplex invite gateway", () => {
       },
     });
 
-    const [ok, payload] = respond.mock.calls[0];
+    const firstCall = respond.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    if (!firstCall) {
+      throw new Error("missing response call");
+    }
+    const [ok, payload] = firstCall;
     expect(ok).toBe(true);
     expect(payload).toMatchObject({ accountId: "ops" });
     expect(getLastCommand()).toBe("/delete_address");

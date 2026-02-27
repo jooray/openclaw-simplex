@@ -6,8 +6,8 @@ import type {
   WizardPrompter,
 } from "openclaw/plugin-sdk";
 import {
-  addWildcardAllowFrom,
   DEFAULT_ACCOUNT_ID,
+  addWildcardAllowFrom,
   formatDocsLink,
   normalizeAccountId,
   promptAccountId,
@@ -79,7 +79,7 @@ function setSimplexDmPolicy(cfg: OpenClawConfig, dmPolicy: DmPolicy): OpenClawCo
 function setSimplexAllowFrom(
   cfg: OpenClawConfig,
   accountId: string,
-  allowFrom: string[],
+  allowFrom: string[]
 ): OpenClawConfig {
   if (accountId === DEFAULT_ACCOUNT_ID) {
     return {
@@ -131,7 +131,7 @@ async function noteSimplexSetup(prompter: WizardPrompter): Promise<void> {
       "Use the Control UI to create invite or address links.",
       `Docs: ${formatDocsLink("/channels/simplex", "channels/simplex")}`,
     ].join("\n"),
-    "SimpleX setup",
+    "SimpleX setup"
   );
 }
 
@@ -159,7 +159,7 @@ async function promptSimplexAllowFrom(params: {
       "- contact:abc123",
       "- #groupId",
     ].join("\n"),
-    "SimpleX allowlist",
+    "SimpleX allowlist"
   );
 
   while (true) {

@@ -38,7 +38,7 @@ export async function resolveMediaPath(params: {
       fetched.contentType,
       "simplex",
       params.maxBytes,
-      fetched.fileName,
+      fetched.fileName
     );
     return { path: saved.path, contentType: saved.contentType, fileName: fetched.fileName };
   }

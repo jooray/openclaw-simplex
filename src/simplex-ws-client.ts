@@ -87,7 +87,7 @@ export class SimplexWsClient {
 
       const timeout = setTimeout(() => {
         const timeoutError = new Error(
-          `SimpleX WS connect timeout after ${this.connectTimeoutMs}ms`,
+          `SimpleX WS connect timeout after ${this.connectTimeoutMs}ms`
         );
         this.handleSocketDisconnect(ws, timeoutError);
         ws.terminate();

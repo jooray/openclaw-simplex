@@ -13,7 +13,7 @@ describe("simplex commands", () => {
       buildSendMessagesCommand({
         chatRef: "@123 ttl=on",
         composedMessages: [],
-      }),
+      })
     ).toThrow("invalid SimpleX chat ref");
   });
 
@@ -22,7 +22,7 @@ describe("simplex commands", () => {
       buildDeleteChatItemCommand({
         chatRef: "@123",
         chatItemIds: ["1,2"],
-      }),
+      })
     ).toThrow("invalid SimpleX chat item id");
   });
 
@@ -31,7 +31,7 @@ describe("simplex commands", () => {
       buildReceiveFileCommand({
         fileId: 7,
         filePath: "/tmp/My File's Name.png",
-      }),
+      })
     ).toBe("/freceive 7 '/tmp/My File\\'s Name.png'");
   });
 
@@ -47,7 +47,7 @@ describe("simplex commands", () => {
             },
           },
         ],
-      }),
+      })
     ).toBe('/_send @123 json [{"msgContent":{"type":"text","text":"hello world"}}]');
   });
 
@@ -56,16 +56,16 @@ describe("simplex commands", () => {
       buildUpdateGroupProfileCommand({
         groupId: "my-group",
         profile: { displayName: "Team Room" },
-      }),
+      })
     ).toBe('/_group_profile #my-group {"displayName":"Team Room"}');
   });
 
   it("rejects unsupported local/scoped chat refs", () => {
     expect(() => formatChatRef({ type: "local", id: "abc" })).toThrow(
-      "local SimpleX chat refs are not supported",
+      "local SimpleX chat refs are not supported"
     );
     expect(() => formatChatRef({ type: "direct", id: "abc", scope: "team" })).toThrow(
-      "scoped SimpleX chat refs are not supported",
+      "scoped SimpleX chat refs are not supported"
     );
   });
 });
