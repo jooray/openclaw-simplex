@@ -64,25 +64,23 @@ function normalizeSimplexChatRef(raw: string): string {
   if (!withoutPrefix) {
     return withoutPrefix;
   }
-  if (withoutPrefix.startsWith("@") || withoutPrefix.startsWith("#")) {
-    return withoutPrefix;
+  if (withoutPrefix.startsWith("#") || withoutPrefix.toLowerCase().startsWith("group:")) {
+    return normalizeGroupRef(withoutPrefix);
+  }
+  if (withoutPrefix.startsWith("@")) {
+    return normalizeContactRef(withoutPrefix);
   }
 
   const lowered = withoutPrefix.toLowerCase();
-  if (lowered.startsWith("group:")) {
-    const id = withoutPrefix.slice("group:".length).trim();
-    return id ? `#${id}` : withoutPrefix;
-  }
   if (
     lowered.startsWith("contact:") ||
     lowered.startsWith("user:") ||
     lowered.startsWith("member:")
   ) {
-    const id = withoutPrefix.slice(withoutPrefix.indexOf(":") + 1).trim();
-    return id ? `@${id}` : withoutPrefix;
+    return normalizeContactRef(withoutPrefix);
   }
 
-  return `@${withoutPrefix}`;
+  return normalizeContactRef(withoutPrefix);
 }
 
 function normalizeChatRefToken(value: string): string {
