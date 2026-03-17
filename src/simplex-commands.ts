@@ -22,6 +22,8 @@ export type SimplexComposedMessage = {
   mentions?: Record<string, number>;
 };
 
+export const SIMPLEX_SEND_COMMAND_SAFE_BYTES = 14_000;
+
 function isAsciiAlnumUnderscoreOrHyphen(value: string): boolean {
   for (const ch of value) {
     const code = ch.charCodeAt(0);
@@ -151,6 +153,146 @@ export function buildSendMessagesCommand(params: {
   const ttlFlag = typeof params.ttl === "number" ? ` ttl=${params.ttl}` : "";
   const json = JSON.stringify(params.composedMessages);
   return `/_send ${chatRef}${liveFlag}${ttlFlag} json ${json}`;
+}
+
+function measureSendMessagesCommandBytes(params: {
+  chatRef: string;
+  composedMessages: SimplexComposedMessage[];
+}): number {
+  return Buffer.byteLength(buildSendMessagesCommand(params), "utf8");
+}
+
+function withUpdatedMessageText(
+  message: SimplexComposedMessage,
+  text: string
+): SimplexComposedMessage {
+  return {
+    ...message,
+    msgContent: {
+      ...message.msgContent,
+      text,
+    },
+  };
+}
+
+function buildContinuationTextMessage(
+  message: SimplexComposedMessage,
+  text: string
+): SimplexComposedMessage {
+  if (message.fileSource || message.msgContent.type !== "text") {
+    return {
+      msgContent: {
+        type: "text",
+        text,
+      },
+    };
+  }
+  return {
+    msgContent: {
+      ...message.msgContent,
+      text,
+    },
+  };
+}
+
+function splitOversizedComposedMessage(params: {
+  chatRef: string;
+  message: SimplexComposedMessage;
+  maxBytes: number;
+}): SimplexComposedMessage[] {
+  const text = params.message.msgContent.text;
+  if (!text) {
+    throw new Error("SimpleX composed message exceeds safe send budget");
+  }
+
+  const codePoints = Array.from(text);
+  const chunks: SimplexComposedMessage[] = [];
+  let offset = 0;
+
+  while (offset < codePoints.length) {
+    const buildMessage =
+      chunks.length === 0
+        ? (chunkText: string) => withUpdatedMessageText(params.message, chunkText)
+        : (chunkText: string) => buildContinuationTextMessage(params.message, chunkText);
+    let low = 1;
+    let high = codePoints.length - offset;
+    let best = 0;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const candidate = buildMessage(codePoints.slice(offset, offset + mid).join(""));
+      const size = measureSendMessagesCommandBytes({
+        chatRef: params.chatRef,
+        composedMessages: [candidate],
+      });
+      if (size <= params.maxBytes) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    if (best === 0) {
+      throw new Error("SimpleX composed message exceeds safe send budget");
+    }
+
+    const chunkText = codePoints.slice(offset, offset + best).join("");
+    chunks.push(buildMessage(chunkText));
+    offset += best;
+  }
+
+  return chunks;
+}
+
+export function splitSendMessageBatches(params: {
+  chatRef: string;
+  composedMessages: SimplexComposedMessage[];
+  maxBytes?: number;
+}): SimplexComposedMessage[][] {
+  const maxBytes = params.maxBytes ?? SIMPLEX_SEND_COMMAND_SAFE_BYTES;
+  const batches: SimplexComposedMessage[][] = [];
+  let currentBatch: SimplexComposedMessage[] = [];
+
+  const pushMessage = (message: SimplexComposedMessage): void => {
+    const nextBatch = [...currentBatch, message];
+    if (
+      currentBatch.length === 0 ||
+      measureSendMessagesCommandBytes({
+        chatRef: params.chatRef,
+        composedMessages: nextBatch,
+      }) <= maxBytes
+    ) {
+      currentBatch = nextBatch;
+      return;
+    }
+    batches.push(currentBatch);
+    currentBatch = [message];
+  };
+
+  for (const message of params.composedMessages) {
+    const messageFits =
+      measureSendMessagesCommandBytes({
+        chatRef: params.chatRef,
+        composedMessages: [message],
+      }) <= maxBytes;
+    const normalizedMessages = messageFits
+      ? [message]
+      : splitOversizedComposedMessage({
+          chatRef: params.chatRef,
+          message,
+          maxBytes,
+        });
+    for (const normalizedMessage of normalizedMessages) {
+      pushMessage(normalizedMessage);
+    }
+  }
+
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch);
+  }
+
+  return batches;
 }
 
 export function buildUpdateChatItemCommand(params: {
