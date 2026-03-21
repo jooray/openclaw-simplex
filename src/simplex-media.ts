@@ -6,6 +6,33 @@ import type { SimplexComposedMessage, SimplexMsgContent } from "./simplex-comman
 
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 
+function describeMediaLabel(mediaUrl: string): string {
+  const trimmed = mediaUrl.trim();
+  if (!trimmed) {
+    return "attachment";
+  }
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      const parsed = new URL(trimmed);
+      const fileName = path.basename(parsed.pathname);
+      return fileName || parsed.hostname || trimmed;
+    } catch {
+      return trimmed;
+    }
+  }
+  return path.basename(trimmed) || trimmed;
+}
+
+function formatUnavailableMediaNotice(labels: string[]): string {
+  if (labels.length === 0) {
+    return "";
+  }
+  if (labels.length === 1) {
+    return `Attachment unavailable: ${labels[0]}`;
+  }
+  return `Attachments unavailable: ${labels.join(", ")}`;
+}
+
 export function resolveSimplexMediaMaxBytes(params: {
   cfg: OpenClawConfig;
   accountId?: string | null;
@@ -120,24 +147,40 @@ export async function buildComposedMessages(params: {
     cfg: params.cfg,
     accountId: params.accountId,
   });
+  const unavailableMedia: string[] = [];
+  let deliveredMediaCount = 0;
 
   for (let i = 0; i < mediaList.length; i += 1) {
     const mediaUrl = mediaList[i];
     if (!mediaUrl) {
       continue;
     }
-    const resolved = await resolveMediaPath({ mediaUrl, maxBytes });
-    const caption = i === 0 ? text : "";
-    const msgContent = buildMediaMsgContent({
-      text: caption,
-      mediaPath: resolved.path,
-      contentType: resolved.contentType,
-      fileName: resolved.fileName,
-      audioAsVoice: params.audioAsVoice,
-    });
+    try {
+      const resolved = await resolveMediaPath({ mediaUrl, maxBytes });
+      const caption = deliveredMediaCount === 0 ? text : "";
+      const msgContent = buildMediaMsgContent({
+        text: caption,
+        mediaPath: resolved.path,
+        contentType: resolved.contentType,
+        fileName: resolved.fileName,
+        audioAsVoice: params.audioAsVoice,
+      });
+      composedMessages.push({
+        fileSource: { filePath: resolved.path },
+        msgContent,
+      });
+      deliveredMediaCount += 1;
+    } catch (error) {
+      const label = describeMediaLabel(mediaUrl);
+      unavailableMedia.push(label);
+    }
+  }
+
+  const unavailableNotice = formatUnavailableMediaNotice(unavailableMedia);
+  if (unavailableNotice) {
+    const noticeText = deliveredMediaCount === 0 && text ? `${text}\n\n${unavailableNotice}` : unavailableNotice;
     composedMessages.push({
-      fileSource: { filePath: resolved.path },
-      msgContent,
+      msgContent: { type: "text", text: noticeText },
     });
   }
 
