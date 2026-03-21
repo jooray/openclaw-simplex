@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import {
   buildDeleteChatItemCommand,
   buildReceiveFileCommand,
@@ -50,6 +50,34 @@ describe("simplex commands", () => {
       })
     ).toBe('/_send @123 json [{"msgContent":{"type":"text","text":"hello world"}}]');
   });
+
+  it("normalizes scoped SimpleX group refs in send command", () => {
+    expect(
+      buildSendMessagesCommand({
+        chatRef: "simplex:group:1",
+        composedMessages: [
+          {
+            msgContent: {
+              type: "text",
+              text: "hello group",
+            },
+          },
+        ],
+      })
+    ).toBe('/_send #1 json [{"msgContent":{"type":"text","text":"hello group"}}]');
+  });
+
+  test.each(["simplex:4", "simplex:contact:4", "simplex:user:4", "simplex:member:4"])(
+    "normalizes scoped SimpleX direct ref %s in delete command",
+    (chatRef) => {
+      expect(
+        buildDeleteChatItemCommand({
+          chatRef,
+          chatItemIds: [12],
+        })
+      ).toBe("/_delete item @4 12 broadcast");
+    }
+  );
 
   it("emits raw JSON payload in update group profile command", () => {
     expect(
