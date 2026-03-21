@@ -263,6 +263,7 @@ export async function startSimplexMonitor(params: SimplexMonitorOpts): Promise<{
       error: (message) => runtime.error?.(message),
     },
   });
+  client.enableAutoReconnect();
 
   await connectWithRetry({
     client,

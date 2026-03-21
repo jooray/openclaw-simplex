@@ -106,4 +106,39 @@ describe("SimplexWsClient", () => {
 
     await client.close();
   });
+
+  it("auto-reconnects and resumes event delivery without outbound traffic", async () => {
+    if (!server) {
+      throw new Error("server not initialized");
+    }
+
+    let connectionCount = 0;
+    let reconnected = false;
+    const reconnectSignal = new Promise<void>((resolve) => {
+      server?.wss.on("connection", (socket) => {
+        connectionCount += 1;
+        if (connectionCount === 1) {
+          setTimeout(() => socket.close(), 10);
+          return;
+        }
+        reconnected = true;
+        socket.send(JSON.stringify({ resp: { type: "reconnected-event" } }));
+        resolve();
+      });
+    });
+
+    const events: string[] = [];
+    const client = new SimplexWsClient({ url: server.url, autoReconnectMs: 20 });
+    client.enableAutoReconnect();
+    client.onEvent((event) => events.push(event.type));
+
+    await client.connect();
+    await reconnectSignal;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(reconnected).toBe(true);
+    expect(events).toContain("reconnected-event");
+
+    await client.close();
+  });
 });
