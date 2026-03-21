@@ -18,6 +18,7 @@ export type SimplexWsEvent = {
 export type SimplexWsClientOptions = {
   url: string;
   connectTimeoutMs?: number;
+  autoReconnectMs?: number;
   logger?: {
     info?: (message: string) => void;
     warn?: (message: string) => void;
@@ -35,16 +36,30 @@ type PendingCommand = {
 export class SimplexWsClient {
   private readonly url: string;
   private readonly connectTimeoutMs: number;
+  private readonly autoReconnectMs: number;
   private readonly logger?: SimplexWsClientOptions["logger"];
   private ws: WebSocket | null = null;
   private connectPromise: Promise<void> | null = null;
   private pending = new Map<string, PendingCommand>();
   private eventHandlers = new Set<(event: SimplexWsEvent) => void>();
+  private autoReconnectEnabled = false;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private closeRequested = false;
 
   constructor(options: SimplexWsClientOptions) {
     this.url = options.url;
     this.connectTimeoutMs = options.connectTimeoutMs ?? 15_000;
+    this.autoReconnectMs = options.autoReconnectMs ?? 1_000;
     this.logger = options.logger;
+  }
+
+  enableAutoReconnect(): void {
+    this.autoReconnectEnabled = true;
+  }
+
+  disableAutoReconnect(): void {
+    this.autoReconnectEnabled = false;
+    this.clearReconnectTimer();
   }
 
   onEvent(handler: (event: SimplexWsEvent) => void): () => void {
@@ -55,6 +70,8 @@ export class SimplexWsClient {
   }
 
   async connect(): Promise<void> {
+    this.clearReconnectTimer();
+    this.closeRequested = false;
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       return;
     }
@@ -140,12 +157,16 @@ export class SimplexWsClient {
   }
 
   async close(): Promise<void> {
+    this.closeRequested = true;
+    this.disableAutoReconnect();
     this.rejectAllPending(new Error("SimpleX WS closed"));
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       await new Promise<void>((resolve) => {
         this.ws?.once("close", () => resolve());
         this.ws?.close();
       });
+    } else if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+      this.ws.terminate();
     }
     this.ws = null;
   }
@@ -233,5 +254,36 @@ export class SimplexWsClient {
     }
     this.ws = null;
     this.rejectAllPending(error);
+    if (this.autoReconnectEnabled && !this.closeRequested) {
+      this.scheduleReconnect();
+    }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer || this.connectPromise || this.closeRequested || !this.autoReconnectEnabled) {
+      return;
+    }
+    this.logger?.warn?.(`SimpleX WS reconnecting in ${this.autoReconnectMs}ms`);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (this.closeRequested || !this.autoReconnectEnabled) {
+        return;
+      }
+      void this.connect()
+        .then(() => {
+          this.logger?.info?.(`SimpleX WS reconnected: ${this.url}`);
+        })
+        .catch((err) => {
+          this.logger?.warn?.(`SimpleX WS reconnect failed: ${String(err)}`);
+          this.scheduleReconnect();
+        });
+    }, this.autoReconnectMs);
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 }

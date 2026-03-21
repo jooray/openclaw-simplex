@@ -80,12 +80,12 @@ function setupHandlers(config: Record<string, unknown> = {}): Map<string, Handle
     registerGatewayMethod: (method, handler) => methods.set(method, handler as Handler),
     registerTool: () => {},
     registerHook: () => {},
-    registerHttpHandler: () => {},
     registerHttpRoute: () => {},
     registerCli: () => {},
     registerService: () => {},
     registerProvider: () => {},
     registerCommand: () => {},
+    registerContextEngine: () => {},
     on: () => {},
     resolvePath: (value: string) => value,
   });
