@@ -1,13 +1,8 @@
-import type {
-  ChannelGroupContext,
-  ChannelPlugin,
-  GroupToolPolicyConfig,
-} from "openclaw/plugin-sdk";
-import {
-  DEFAULT_ACCOUNT_ID,
-  PAIRING_APPROVED_MESSAGE,
-  formatPairingApproveHint,
-} from "openclaw/plugin-sdk";
+import type { ChannelPlugin } from "openclaw/plugin-sdk";
+import type { ChannelGroupContext } from "openclaw/plugin-sdk/channel-contract";
+import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk/channel-policy";
+import { PAIRING_APPROVED_MESSAGE } from "openclaw/plugin-sdk/channel-status";
+import { DEFAULT_ACCOUNT_ID, formatPairingApproveHint } from "openclaw/plugin-sdk/core";
 import {
   listSimplexAccountIds,
   resolveDefaultSimplexAccountId,
@@ -15,7 +10,7 @@ import {
 } from "./accounts.js";
 import { simplexMessageActions } from "./actions.js";
 import { SimplexChannelConfigSchema } from "./config-schema.js";
-import { simplexOnboardingAdapter } from "./onboarding.js";
+import { simplexSetupAdapter } from "./setup.js";
 import { startSimplexCli } from "./simplex-cli.js";
 import { type SimplexComposedMessage, buildSendMessagesCommand } from "./simplex-commands.js";
 import {
@@ -293,7 +288,6 @@ export const simplexPlugin: ChannelPlugin<ResolvedSimplexAccount> = {
     order: 95,
     quickstartAllowFrom: true,
   },
-  onboarding: simplexOnboardingAdapter,
   pairing: {
     idLabel: "simplexContactId",
     normalizeAllowEntry: (entry) => stripLeadingAt(stripSimplexPrefix(entry)),
@@ -323,6 +317,7 @@ export const simplexPlugin: ChannelPlugin<ResolvedSimplexAccount> = {
     groupManagement: true,
   },
   reload: { configPrefixes: ["channels.simplex"] },
+  setup: simplexSetupAdapter,
   configSchema: SimplexChannelConfigSchema,
   config: {
     listAccountIds: (cfg) => listSimplexAccountIds(cfg),
