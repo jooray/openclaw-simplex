@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-03-24
+
+### Changed
+
+- Migrated SimpleX channel setup from the legacy onboarding adapter to the current OpenClaw setup flow.
+- Updated plugin SDK integration for newer OpenClaw channel, setup, media, directory, and action APIs.
+- Raised the minimum supported OpenClaw version to `2026.3.22`.
+
+### Fixed
+
+- Normalized SimpleX allowlist handling without relying on removed shared SDK helpers.
+- Tightened config schema definitions and related tests for newer SDK expectations.
+
 ## [0.1.1] - 2026-03-02
 
 ### Added
