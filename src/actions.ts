@@ -1,8 +1,8 @@
+import type { OpenClawConfig } from "openclaw/plugin-sdk";
 import type {
   ChannelMessageActionAdapter,
   ChannelMessageActionName,
-  OpenClawConfig,
-} from "openclaw/plugin-sdk";
+} from "openclaw/plugin-sdk/channel-contract";
 import { listEnabledSimplexAccounts, resolveSimplexAccount } from "./accounts.js";
 import {
   type SimplexComposedMessage,
@@ -212,22 +212,25 @@ async function resolveEditMessage(params: {
 }
 
 export const simplexMessageActions: ChannelMessageActionAdapter = {
-  listActions: ({ cfg }) => {
-    const accounts = listEnabledSimplexAccounts(cfg).filter((account) => account.configured);
-    if (accounts.length === 0) {
-      return [];
+  describeMessageTool: ({ cfg }) => {
+    const actions = listEnabledSimplexAccounts(cfg).filter((account) => account.configured);
+    if (actions.length === 0) {
+      return null;
     }
-    return [
-      "send",
-      "react",
-      "edit",
-      "delete",
-      "unsend",
-      "renameGroup",
-      "addParticipant",
-      "removeParticipant",
-      "leaveGroup",
-    ];
+    return {
+      actions: [
+        "send",
+        "react",
+        "edit",
+        "delete",
+        "unsend",
+        "renameGroup",
+        "addParticipant",
+        "removeParticipant",
+        "leaveGroup",
+      ] as const satisfies readonly ChannelMessageActionName[],
+      capabilities: [],
+    };
   },
   supportsAction: ({ action }) => SUPPORTED_ACTIONS.has(action),
   handleAction: async ({ action, params, cfg, accountId }) => {

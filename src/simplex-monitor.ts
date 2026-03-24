@@ -1,5 +1,5 @@
 import type { ChannelAccountSnapshot, OpenClawConfig, RuntimeEnv } from "openclaw/plugin-sdk";
-import { resolveMentionGatingWithBypass } from "openclaw/plugin-sdk";
+import { resolveMentionGatingWithBypass } from "openclaw/plugin-sdk/channel-inbound";
 import { getSimplexRuntime } from "./runtime.js";
 import {
   buildCancelFileCommand,
@@ -501,12 +501,6 @@ async function handleSimplexEvent(params: {
         }
       }
     } else {
-      if (dmPolicy === "disabled") {
-        runtime.log?.(
-          `[${account.accountId}] SimpleX drop DM from ${context.senderId ?? "unknown"} (dmPolicy=disabled)`
-        );
-        continue;
-      }
       if (dmPolicy !== "open") {
         const allowed = isSimplexAllowlisted({
           allowFrom: effectiveDmAllowFrom,

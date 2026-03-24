@@ -1,5 +1,5 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
+import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/core";
 import { toDataURL as toQrDataUrl } from "qrcode";
 import { resolveDefaultSimplexAccountId, resolveSimplexAccount } from "./src/accounts.js";
 import { simplexPlugin } from "./src/channel.js";

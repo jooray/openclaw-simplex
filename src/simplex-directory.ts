@@ -1,9 +1,5 @@
-import type {
-  ChannelDirectoryEntry,
-  ChannelResolveResult,
-  OpenClawConfig,
-  RuntimeEnv,
-} from "openclaw/plugin-sdk";
+import type { OpenClawConfig, RuntimeEnv } from "openclaw/plugin-sdk";
+import type { ChannelDirectoryEntry } from "openclaw/plugin-sdk/directory-runtime";
 import { resolveSimplexAccount } from "./accounts.js";
 import {
   buildListContactsCommand,
@@ -18,6 +14,14 @@ type SimplexDirectoryParams = {
   cfg: OpenClawConfig;
   accountId?: string | null;
   runtime: RuntimeEnv;
+};
+
+type SimplexResolveResult = {
+  input: string;
+  resolved: boolean;
+  id?: string;
+  name?: string;
+  note?: string;
 };
 
 type ActiveUserInfo = {
@@ -380,7 +384,7 @@ export async function resolveSimplexTargets(params: {
   inputs: string[];
   kind: "user" | "group";
   runtime: RuntimeEnv;
-}): Promise<ChannelResolveResult[]> {
+}): Promise<SimplexResolveResult[]> {
   const account = resolveSimplexAccount({ cfg: params.cfg, accountId: params.accountId });
   if (!account.configured) {
     return params.inputs.map((input) => ({
