@@ -54,7 +54,23 @@ Enable plugin:
 openclaw plugins enable simplex
 ```
 
+Trust the plugin explicitly:
+
+```bash
+openclaw config set plugins.allow '["simplex"]' --strict-json
+```
+
+`plugins enable simplex` only enables the plugin. OpenClaw will not start the SimpleX runtime until `channels.simplex` is configured.
+
 ## 4. Configure channel
+
+Managed mode via CLI:
+
+```bash
+openclaw channels add --channel simplex --cli-path simplex-chat
+```
+
+Or write config directly:
 
 ```json
 {
@@ -84,6 +100,8 @@ openclaw plugins info simplex
 ```
 
 In Control UI, open `Control -> Channels -> SimpleX`:
+
+Note: the current SimpleX card is a config editor. For this external plugin, the interactive `openclaw channels add` picker may not list SimpleX yet.
 
 ![SimpleX channel card before invite generation](/images/control-ui.png)
 
