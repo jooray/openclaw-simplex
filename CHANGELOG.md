@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-03-25
+
+### Changed
+
+- Aligned the plugin entrypoints with the current OpenClaw channel plugin structure, including a dedicated `setup-entry`.
+- Updated operator documentation to reflect the current OpenClaw flow for external plugins, including trust via `plugins.allow` and explicit `channels.simplex.connection` setup.
+
+### Fixed
+
+- Improved SimpleX runtime status reporting so connection state, disconnects, and health are surfaced more accurately in OpenClaw.
+- Fixed a runtime logger crash in the SimpleX monitor connection-status path.
+- Stopped treating implicit managed defaults as a configured channel; SimpleX now requires explicit connection config before OpenClaw marks it startup-capable.
+- Updated invite gateway tests to match the explicit connection-config requirement.
+
 ## [0.2.0] - 2026-03-24
 
 ### Changed
