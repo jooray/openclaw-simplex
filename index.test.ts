@@ -109,6 +109,7 @@ function setupHandlers(
     registerContextEngine: () => {},
     registerMemoryPromptSection: () => {},
     registerCommand: () => {},
+    registerContextEngine: () => {},
     on: () => {},
     resolvePath: (value: string) => value,
   });
