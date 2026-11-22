@@ -1,3 +1,5 @@
+> **Archived — I stopped using OpenClaw.** This fork carried two fixes while I was running the plugin, and both are now upstream in a restructured form: automatic reconnect after an unexpected monitor disconnect (`src/channel/events/simplex-monitor.ts`, `connectSimplexWithRetry`) and a text fallback when an inbound attachment is missing (`src/channel/events/simplex-inbound-files.ts`, `formatInboundMediaUnavailableText`). Use [dangoldbj/openclaw-simplex](https://github.com/dangoldbj/openclaw-simplex) instead. The two pull requests here (#1, #2) were closed unmerged because the files they patch no longer exist upstream.
+
 # @dangoldbj/openclaw-simplex
 
 > **TL;DR:** Run OpenClaw agents over SimpleX with no phone numbers, no hosted or unofficial bot APIs, and full end-to-end encryption.
